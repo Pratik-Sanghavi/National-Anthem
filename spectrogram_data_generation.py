@@ -33,5 +33,5 @@ for file in files[1:]:
         power = 2.0
     )
     spec = spectrogram(waveform)
-    plot_spectrogram(spec=spec[0], title = file.split(".mp3")[0])
+    # plot_spectrogram(spec=spec[0], title = file.split(".mp3")[0])
     break
