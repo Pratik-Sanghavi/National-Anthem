@@ -3,6 +3,7 @@ from pyAudioAnalysis.ShortTermFeatures import feature_extraction
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 import os
 
 
@@ -42,16 +43,23 @@ def getNoteFrequency(chromagram):
   return normalized_hist
 
 DATA_PATH = 'national_anthem_scrape/national_anthem_dataset/audio_files'
+OUTFILE = 'national_anthem_scrape/national_anthem_dataset/features.csv'
 def getDataset(filePath):
   fileList = os.listdir(filePath)
   X = pd.DataFrame()
   columns = [ "G#", "G", "F#", "F", "E", "D#", "D", "C#", "C", "B", "A#", "A" ]
-  for file in fileList:
+  for file in tqdm(fileList):
     feature_name, features = preProcess(os.path.join(filePath, file))
+    chromagram = getChromagram(features)
+    noteFrequency = getNoteFrequency(chromagram)
+    x_new = pd.Series(noteFrequency[0, :])
+    X = pd.concat([X, x_new], axis = 1)
   data = X.T.copy()
   data.columns = columns
   data.index = [i for i in range(0, data.shape[0])]
+  data['file_name'] = fileList
+  data = data[list([data.columns[-1]]) + list(data.columns[:-1])]
   return data
 
 data = getDataset(DATA_PATH)
-print(data)
+data.to_csv(OUTFILE, index = False)
