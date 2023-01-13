@@ -20,7 +20,7 @@ for num_clusters in tqdm(range(start, stop)):
 
     # kmeans
     cluster_ids_x, cluster_centers = kmeans(
-        X=x, num_clusters=num_clusters, distance='euclidean', device=torch.device('cuda:0')
+        X=x, num_clusters=num_clusters, distance='euclidean', device=torch.device('cuda:0'), tqdm_flag = False
     )
     dist_list = []
     for i in range(len(x)):
