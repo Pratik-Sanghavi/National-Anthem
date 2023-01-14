@@ -38,4 +38,4 @@ fig = px.choropleth(
     color_continuous_scale=px.colors.sequential.Plasma
 )
 
-fig.show()
+fig.write_image('./k_means_clustering/artifacts/world_map_clustered.png', format = "png")
