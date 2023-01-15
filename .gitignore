@@ -2,4 +2,5 @@ Venv_Scrape
 national_anthem_scrape/national_anthem_dataset
 national_anthem_scrape/__pycache__
 national_anthem_feature_engineering/__pycache__
+k_means_clustering/__pycache__
 k_means_clustering/artifacts
