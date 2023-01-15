@@ -5,6 +5,7 @@ import os
 import national_anthem_scrape.constants as constants
 import time
 import pandas as pd
+import re
 
 class NationalAnthem(webdriver.Chrome):
     def __init__(self,
@@ -45,24 +46,40 @@ class NationalAnthem(webdriver.Chrome):
                     links.append(link.get_attribute('href'))
         return list(set(links))
 
-    def download_music(self, links):
+    def download_music(self, links, download = True):
         names = []
         mp3_files = []
+        english_translations = []
         for link in tqdm(links):
             self.get(link)
             try:
                 music_link = self.find_element(By.CSS_SELECTOR, 'a[id^="mp3"]')
                 title = self.find_element(By.TAG_NAME, 'h1')
-                music_link.click()
+                if download:
+                    music_link.click()
                 names.append(title.get_attribute('innerHTML'))
+                try:
+                    english_trans_id = self.find_element(By.CSS_SELECTOR, 'div[title="English translation"]')
+                    id = english_trans_id.get_attribute('id')
+                    english_trans_html = self.find_element(By.CSS_SELECTOR, f'div[id="target-{id}"]').get_attribute('innerHTML')
+                    remove_exp = re.compile('<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});')
+                    english_trans = re.sub(remove_exp, '', english_trans_html)
+                except:
+                    english_trans = ""
                 mp3_files.append(music_link.get_attribute('href').split('/')[-1])
-                time.sleep(5)
+                english_translations.append(english_trans)
+                if download:
+                    time.sleep(5)
             except:
-                print(f"Not present for: {link}")
+                with open(self.download_directory.replace("\\", "/").replace("audio_files", "") + "/" + "error_files.txt", 'a') as f:
+                    f.write(f"Not present for: {link}\n")
+
         key_df = pd.DataFrame({
             'Country': names,
-            'Audio_File': mp3_files
+            'Audio_File': mp3_files,
+            'English_Translation': english_translations
         })
         key_df['File_Location'] = self.download_directory.replace("\\", "/") + "/" + key_df["Audio_File"]
         key_location = self.download_directory.replace("\\", "/").replace("audio_files", "")
+        key_df.drop_duplicates(inplace=True)
         key_df.to_csv(f'{key_location}/key.csv', index = False)
