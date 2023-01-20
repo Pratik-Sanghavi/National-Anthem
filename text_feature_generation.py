@@ -45,20 +45,20 @@ def processDataFrame(corpus, stemming = True):
     
     # TOKENIZE TEXT DATA
     listOfTokens = word_tokenize(corpus)
-    if stemming:
-        listOfCountries = applyStemming(countries_list, param_stemmer)
-        listOfNationalities = applyStemming(nationalities_list, param_stemmer)
-        listOfOtherWords = applyStemming(other_words, param_stemmer)
-    else:
-        listOfCountries = applyLemmatization(countries_list, param_stemmer)
-        listOfNationalities = applyLemmatization(nationalities_list, param_stemmer)
-        listOfOtherWords = applyLemmatization(other_words, param_stemmer)
+    # if stemming:
+    #     listOfCountries = applyStemming(countries_list, param_stemmer)
+    #     listOfNationalities = applyStemming(nationalities_list, param_stemmer)
+    #     listOfOtherWords = applyStemming(other_words, param_stemmer)
+    # else:
+    #     listOfCountries = applyLemmatization(countries_list, param_stemmer)
+    #     listOfNationalities = applyLemmatization(nationalities_list, param_stemmer)
+    #     listOfOtherWords = applyLemmatization(other_words, param_stemmer)
     
     # REMOVE STOPWORDS AND COUNTRY SPECIFIC REFERENCES
     listOfTokens = removeWords(listOfTokens, stopwords)
-    listOfTokens = removeWords(listOfTokens, listOfCountries)
-    listOfTokens = removeWords(listOfTokens, listOfNationalities)
-    listOfTokens = removeWords(listOfTokens, listOfOtherWords)
+    listOfTokens = removeWords(listOfTokens, countries_list)
+    listOfTokens = removeWords(listOfTokens, nationalities_list)
+    listOfTokens = removeWords(listOfTokens, other_words)
 
     if stemming:
         listOfTokens = applyStemming(listOfTokens, param_stemmer)
@@ -81,6 +81,7 @@ vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(corpus)
 tf_idf = pd.DataFrame(data = X.toarray(), columns = vectorizer.get_feature_names_out())
 final_df = tf_idf
-
-print("{} rows".format(final_df.shape[0]))
-print(final_df.T.nlargest(5,0))
+n_largest = 30
+cols_of_interest = final_df.T.nlargest(n_largest, 0).index
+cols_of_interest = [y for x in [["Country"], cols_of_interest] for y in x]
+print(cols_of_interest)
