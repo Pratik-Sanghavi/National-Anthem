@@ -16,7 +16,7 @@ def applyLemmatization(listOfTokens, stemmer):
 def applyStemming(listOfTokens, stemmer):
     return [stemmer.stem(token) for token in listOfTokens]
 
-def restrictLength(listOfTokens, lower = 2, upper = 21):
+def restrictLength(listOfTokens, lower = 3, upper = 21):
     twoLetterWord = []
     for token in listOfTokens:
         if len(token) <= lower or len(token) >= upper:
@@ -45,14 +45,6 @@ def processDataFrame(corpus, stemming = True):
     
     # TOKENIZE TEXT DATA
     listOfTokens = word_tokenize(corpus)
-    # if stemming:
-    #     listOfCountries = applyStemming(countries_list, param_stemmer)
-    #     listOfNationalities = applyStemming(nationalities_list, param_stemmer)
-    #     listOfOtherWords = applyStemming(other_words, param_stemmer)
-    # else:
-    #     listOfCountries = applyLemmatization(countries_list, param_stemmer)
-    #     listOfNationalities = applyLemmatization(nationalities_list, param_stemmer)
-    #     listOfOtherWords = applyLemmatization(other_words, param_stemmer)
     
     # REMOVE STOPWORDS AND COUNTRY SPECIFIC REFERENCES
     listOfTokens = removeWords(listOfTokens, stopwords)
@@ -76,7 +68,7 @@ def processDataFrame(corpus, stemming = True):
 data = pd.read_csv('national_anthem_scrape/national_anthem_dataset/anthems.csv')[['Country', 'Anthem']]
 data['Country'] = data['Country'].str.capitalize()
 
-corpus = data.apply(lambda row: processDataFrame(row['Anthem'], False), axis = 1).to_list()
+corpus = data.apply(lambda row: processDataFrame(row['Anthem']), axis = 1).to_list()
 vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(corpus)
 tf_idf = pd.DataFrame(data = X.toarray(), columns = vectorizer.get_feature_names_out())
@@ -84,4 +76,6 @@ final_df = tf_idf
 n_largest = 30
 cols_of_interest = final_df.T.nlargest(n_largest, 0).index
 cols_of_interest = [y for x in [["Country"], cols_of_interest] for y in x]
+final_df['Country'] = data['Country']
+final_df = final_df[cols_of_interest]
 print(cols_of_interest)
