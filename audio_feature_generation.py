@@ -3,5 +3,5 @@ from national_anthem_feature_engineering.getAudioFeatures import AudioFeatureGen
 DATA_PATH = 'national_anthem_scrape/national_anthem_dataset/audio_files'
 OUTFILE = 'national_anthem_scrape/national_anthem_dataset/features.csv'
 
-aud_features = AudioFeatureGeneration(data_path=DATA_PATH, out_file=OUTFILE)
-aud_features.writeFile()
+aud_features = AudioFeatureGeneration(data_path=DATA_PATH)
+aud_features.writeFile(out_file=OUTFILE)

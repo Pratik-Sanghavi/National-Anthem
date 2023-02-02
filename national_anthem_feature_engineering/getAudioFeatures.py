@@ -7,9 +7,8 @@ from tqdm import tqdm
 import os
 
 class AudioFeatureGeneration():
-    def __init__(self, data_path, out_file):
+    def __init__(self, data_path):
         self.data_path = data_path
-        self.out_file = out_file
     
     def preProcess(self, file_name):
         (Fs, x) = audioBasicIO.read_audio_file(file_name)
@@ -63,6 +62,6 @@ class AudioFeatureGeneration():
         data = data[list([data.columns[-1]]) + list(data.columns[:-1])]
         return data
     
-    def writeFile(self):
+    def writeFile(self, out_file):
         data = self.getDataset()
-        data.to_csv(self.out_file, index = False)
+        data.to_csv(out_file, index = False)
