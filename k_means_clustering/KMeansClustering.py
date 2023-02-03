@@ -8,10 +8,45 @@ import plotly.express as px
 from tqdm import tqdm
 
 class KMeansCluster():
-    def __init__(self, features_path, key_file_path, num_clusters = None):
-        self.features_path = features_path
+    def __init__(self, 
+                 audio_features_path, 
+                 text_features_path, 
+                 key_file_path, 
+                 key_audio_file_col,
+                 audio_features_file_col, 
+                 key_country_col, 
+                 text_feat_country_col,
+                 num_clusters = None):
+        self.audio_features_path = audio_features_path
+        self.text_features_path = text_features_path
         self.key_file_path = key_file_path
         self.num_clusters = num_clusters
+        self.key_audio_file_col = key_audio_file_col
+        self.audio_features_file_col = audio_features_file_col
+        self.key_country_col = key_country_col
+        self.text_feat_country_col = text_feat_country_col
+        self.audio_features = None
+
+    def data_merge(self):
+        aud_features = pd.read_csv(self.audio_features_path)
+        text_features = pd.read_csv(self.text_features_path)
+        audio_cols = aud_features.columns.to_list()
+        audio_cols.remove(self.audio_features_file_col)
+
+        key_df = pd.read_csv(self.key_file_path)
+        country_aud_df = pd.merge(key_df, 
+                                  aud_features, 
+                                  left_on = self.key_audio_file_col, 
+                                  right_on = self.audio_features_file_col, 
+                                  how = 'left')
+
+        cols_of_interest = [y for x in [[self.key_country_col], audio_cols] for y in x]
+        country_aud_df = country_aud_df[cols_of_interest].fillna(0)
+        self.features_df = pd.merge(country_aud_df, 
+                                    text_features, 
+                                    left_on = self.key_country_col, 
+                                    right_on=self.text_feat_country_col, 
+                                    how = 'outer').fillna(0).drop(columns=[self.text_feat_country_col])
 
     def pairwise_distance(self, data, centroid):
         dis = (data-centroid)**2
@@ -20,11 +55,14 @@ class KMeansCluster():
     def optimal_cluster_search(self, save_path, start = 5, stop = 30, seed = 42):
         if self.num_clusters != None:
             return
+        if self.features_df is None:
+            print('Run data preparation before this step!')
+            return
         start = 5
         stop = 30
         min_dist_list = []
         np.random.seed(seed)
-        X = pd.read_csv(self.features_path)
+        X = self.features_df
         x = X.select_dtypes('number').values
         x = torch.from_numpy(x)
         for num_clusters in tqdm(range(start, stop)):
@@ -52,13 +90,16 @@ class KMeansCluster():
         plt.savefig(save_path, bbox_inches='tight')
 
     def visualise_cluster(self, save_path):
+        if self.features_df is None:
+            print('Run data preparation before this step!')
+            return
         df_world = px.data.gapminder().query("year == 2007")
         # K MEANS CLUSTERING
         num_clusters = self.num_clusters
-        features = pd.read_csv(self.features_path)
+        features = self.features_df
         x = features.select_dtypes('number').values
         x = torch.from_numpy(x)
-        cluster_ids_x, cluster_centers = kmeans(
+        cluster_ids_x, _ = kmeans(
             X=x,
             num_clusters=num_clusters,
             distance='euclidean',
@@ -68,12 +109,11 @@ class KMeansCluster():
         features['cluster_assigned'] = cluster_ids_x.numpy()
 
         # KEY FILE
-        mapping_df = pd.read_csv(self.key_file_path)
-        mapping_with_clusters = pd.merge(mapping_df, features, left_on = "Audio_File", right_on="file_name")[["Country", "cluster_assigned"]]
+        mapping_with_clusters = features[[self.key_country_col, "cluster_assigned"]]
         mapping_with_clusters['cluster_assigned'] = mapping_with_clusters['cluster_assigned'].astype('int')
 
         # FINAL DF
-        df = df_world.merge(mapping_with_clusters, how = 'left', left_on = ["country"], right_on = ["Country"])
+        df = df_world.merge(mapping_with_clusters, how = 'left', left_on = ["country"], right_on = [self.key_country_col])
         df['cluster_assigned'] = df['cluster_assigned'].astype('Int64')
         df.drop_duplicates(subset = "country", inplace = True)
 
