@@ -1,3 +1,4 @@
+.env
 Venv_Scrape
 national_anthem_scrape/national_anthem_dataset
 __pycache__

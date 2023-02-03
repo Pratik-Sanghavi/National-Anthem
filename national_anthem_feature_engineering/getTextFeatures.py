@@ -90,6 +90,7 @@ class TextFeatureGeneration():
     def textFeaturization(self, frac = 0.1, max_features = 100):
         data = pd.read_csv(self.data_path)[[self.country_col, self.anthem_col]]
         data[self.country_col] = data[self.country_col].str.capitalize()
+        data[self.anthem_col] = data[self.anthem_col].astype(str)
         
         corpus = data.apply(lambda row: self.processDataFrame(row[self.anthem_col], False), axis = 1).to_list()
         vectorizer = TfidfVectorizer()

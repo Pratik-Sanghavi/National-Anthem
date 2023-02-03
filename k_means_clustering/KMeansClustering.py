@@ -8,8 +8,8 @@ import plotly.express as px
 from tqdm import tqdm
 
 class KMeansCluster():
-    def __init__(self, audio_features_path, key_file_path, num_clusters = None):
-        self.audio_features_path = audio_features_path
+    def __init__(self, features_path, key_file_path, num_clusters = None):
+        self.features_path = features_path
         self.key_file_path = key_file_path
         self.num_clusters = num_clusters
 
@@ -24,7 +24,7 @@ class KMeansCluster():
         stop = 30
         min_dist_list = []
         np.random.seed(seed)
-        X = pd.read_csv(self.audio_features_path)
+        X = pd.read_csv(self.features_path)
         x = X.select_dtypes('number').values
         x = torch.from_numpy(x)
         for num_clusters in tqdm(range(start, stop)):
@@ -55,8 +55,8 @@ class KMeansCluster():
         df_world = px.data.gapminder().query("year == 2007")
         # K MEANS CLUSTERING
         num_clusters = self.num_clusters
-        song_features = pd.read_csv(self.audio_features_path)
-        x = song_features.select_dtypes('number').values
+        features = pd.read_csv(self.features_path)
+        x = features.select_dtypes('number').values
         x = torch.from_numpy(x)
         cluster_ids_x, cluster_centers = kmeans(
             X=x,
@@ -65,11 +65,11 @@ class KMeansCluster():
             device=torch.device('cuda:0'),
             tqdm_flag = False
         )
-        song_features['cluster_assigned'] = cluster_ids_x.numpy()
+        features['cluster_assigned'] = cluster_ids_x.numpy()
 
         # KEY FILE
         mapping_df = pd.read_csv(self.key_file_path)
-        mapping_with_clusters = pd.merge(mapping_df, song_features, left_on = "Audio_File", right_on="file_name")[["Country", "cluster_assigned"]]
+        mapping_with_clusters = pd.merge(mapping_df, features, left_on = "Audio_File", right_on="file_name")[["Country", "cluster_assigned"]]
         mapping_with_clusters['cluster_assigned'] = mapping_with_clusters['cluster_assigned'].astype('int')
 
         # FINAL DF
